@@ -2,8 +2,11 @@ const express = require('express')
 const http = require('http')
 const socketio = require('socket.io')
 const gameLogic = require('./game-logic')
+const cors = require('cors');
 const app = express()
 
+
+app.use(cors());
 /**
  * Backend flow:
  * - check to see if the game ID encoded in the URL belongs to a valid game session in progress. 
