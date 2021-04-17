@@ -15,7 +15,8 @@ const initializeGame = (sio, socket) => {
      * initializeGame sets up all the socket event listeners. 
      */
 
-    // initialize global variables.
+    // initialize global variables. 
+    console.log(gamesInSession)
     io = sio 
     gameSocket = socket 
 
@@ -37,7 +38,31 @@ const initializeGame = (sio, socket) => {
     gameSocket.on('request username', requestUserName)
 
     gameSocket.on('recieved userName', recievedUserName)
-
+    
+    //listen for draw and resign request  
+   
+    gameSocket.on('draw request', gameid => {
+        const data = {
+            gameid: gameid,
+            socketid: socket.id 
+        }
+        io.to(gameid).emit('draw request',data );
+    })
+    gameSocket.on('Opponent Accepted Draw', gameid => {
+        const data = {
+            gameid: gameid,
+            socketid: socket.id 
+        }
+        io.to(gameid).emit('Opponent Accepted Draw', data);
+    })
+    
+    gameSocket.on('resign request', gameid => {
+        const data = {
+            gameid: gameid,
+            socketid: socket.id 
+        }
+        io.to(gameid).emit('resign request', data);
+    })
     // register event listeners for video chat app:
     videoChatBackend()
 }
@@ -65,7 +90,7 @@ function playerJoinsGame(idData) {
     var sock = this
     
     // Look up the room ID in the Socket.IO manager object.
-    var room = io.sockets.adapter.rooms[idData.gameId]
+    var room = io.sockets.adapter.rooms.get(idData.gameId);
    // console.log(room)
 
     // If the room exists...
@@ -73,17 +98,17 @@ function playerJoinsGame(idData) {
         this.emit('status' , "This game session does not exist." );
         return
     }
-    if (room.length < 2) {
+    if (room.size < 2) {
         // attach the socket id to the data object.
         idData.mySocketId = sock.id;
 
         // Join the room
         sock.join(idData.gameId);
 
-        console.log(room.length)
+        console.log(room.size)
 
-        if (room.length === 2) {
-            io.sockets.in(idData.gameId).emit('start game', idData.userName)
+        if (room.size === 2) {
+            io.in(idData.gameId).emit('start game', idData.userName)
         }
 
         // Emit an event notifying the clients that the player has joined the room.
@@ -100,7 +125,8 @@ function createNewGame(gameId) {
     // Return the Room ID (gameId) and the socket ID (mySocketId) to the browser client
     this.emit('createNewGame', {gameId: gameId, mySocketId: this.id});
 
-    // Join the Room and wait for the other player
+    // Join the Room and wait for the other player 
+    console.log(gameId);
     this.join(gameId)
 }
 
@@ -120,6 +146,7 @@ function newMove(move) {
 function onDisconnect() {
     var i = gamesInSession.indexOf(gameSocket);
     gamesInSession.splice(i, 1);
+    this.discon
 }
 
 

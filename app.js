@@ -1,14 +1,13 @@
 const express = require('express')
 const http = require('http')
-const socketio = require('socket.io')
 const gameLogic = require('./game-logic')
 const cors = require('cors');
 const app = express()
 
 
-app.use(cors({
-    origin: ['http://localhost:3000']
-}));
+// app.use(cors({
+//     origin: ['http://localhost:3000']
+// }));
 /**
  * Backend flow:
  * - check to see if the game ID encoded in the URL belongs to a valid game session in progress. 
@@ -20,7 +19,20 @@ app.use(cors({
 
 
 const server = http.createServer(app)
-const io = socketio(server)
+server.listen(process.env.PORT || 8000, () => {
+    console.log("Server running");
+})
+// server-side
+const io = require("socket.io")(server, {
+    allowEIO3: true,
+    cors: {
+        origin: 'http://localhost:3000',
+        methods: ["GET", "POST"],
+        allowedHeaders: ["my-custom-header"], 
+        credentials: true
+    }
+  });
+  
 
 // get the gameID encoded in the URL. 
 // check to see if that gameID matches with all the games currently in session. 
@@ -29,8 +41,8 @@ const io = socketio(server)
 // run when client connects
 
 io.on('connection', client => {
+    console.log("OK");
     gameLogic.initializeGame(io, client)
 })
 
 // usually this is where we try to connect to our DB.
-server.listen(process.env.PORT || 8000)
